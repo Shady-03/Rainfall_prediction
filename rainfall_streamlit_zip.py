@@ -102,80 +102,12 @@ st.download_button(
     mime="text/csv"
 )
 
-# 🌐 API Integration
-st.subheader("🌐 Actual vs Predicted Rainfall from External API")
-
-API_URL = "http://127.0.0.1:8080/api/data"  # Replace with public URL when deployed
-
-try:
-    with st.spinner("Fetching data from Flask API..."):
-        response = requests.get(API_URL)
-        if response.status_code == 200:
-            api_data = response.json()
-            actual_api = api_data["actual"]
-            predicted_api = api_data["predicted"]
-            indices = list(range(len(actual_api)))
-
-            st.success("✅ Data loaded from API")
-
-            # 2D Plot
-            st.markdown("### 📊 2D Line Plot")
-            fig_api, ax_api = plt.subplots(figsize=(12, 5))
-            ax_api.plot(actual_api, label="Actual")
-            ax_api.plot(predicted_api, label="Predicted")
-            ax_api.set_title("Rainfall Prediction (From API)")
-            ax_api.set_xlabel("Month Index")
-            ax_api.set_ylabel("Rainfall (mm)")
-            ax_api.legend()
-            st.pyplot(fig_api)
-
-            # Toggle for 3D plot style
-            st.markdown("### 🧊 3D Plot Options")
-            plot_style = st.radio("Choose 3D graph style:", ["Single Color", "Dual Color"])
-
-            if plot_style == "Single Color":
-                fig_3d = go.Figure(data=[go.Scatter3d(
-                    x=indices,
-                    y=actual_api,
-                    z=predicted_api,
-                    mode='lines+markers',
-                    line=dict(color='blue'),
-                    marker=dict(size=3),
-                    name='Actual vs Predicted'
-                )])
-            else:
-                trace_actual = go.Scatter3d(
-                    x=indices,
-                    y=actual_api,
-                    z=[0]*len(actual_api),
-                    mode='lines+markers',
-                    name='Actual',
-                    line=dict(color='blue'),
-                    marker=dict(size=3)
-                )
-                trace_predicted = go.Scatter3d(
-                    x=indices,
-                    y=[0]*len(predicted_api),
-                    z=predicted_api,
-                    mode='lines+markers',
-                    name='Predicted',
-                    line=dict(color='red'),
-                    marker=dict(size=3)
-                )
-                fig_3d = go.Figure(data=[trace_actual, trace_predicted])
-
-            fig_3d.update_layout(
-                scene=dict(
-                    xaxis_title='Month Index',
-                    yaxis_title='Actual Rainfall (mm)',
-                    zaxis_title='Predicted Rainfall (mm)'
-                ),
-                title="3D Actual vs Predicted Rainfall (From API)",
-                margin=dict(l=0, r=0, b=0, t=40)
-            )
-
-            st.plotly_chart(fig_3d, use_container_width=True)
-        else:
-            st.error(f"API returned error: {response.status_code}")
-except Exception as e:
-    st.error(f"Failed to fetch API data: {e}")
+# 🌐 API Integration (Temporarily Disabled)
+# st.subheader("🌐 Actual vs Predicted Rainfall from External API")
+# try:
+#     with st.spinner("Fetching data from Flask API..."):
+#         response = requests.get("http://127.0.0.1:8080/api/data")
+#         if response.status_code == 200:
+#             ...
+# except Exception as e:
+#     st.error(f"Failed to fetch API data: {e}")
