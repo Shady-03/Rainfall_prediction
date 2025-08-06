@@ -1,4 +1,4 @@
-# app.py (full version with static + frontend serving)
+# app.py (Render-ready)
 
 from flask import Flask, jsonify, send_from_directory
 import pandas as pd
@@ -9,7 +9,7 @@ import os
 
 app = Flask(__name__)
 
-# Load model and scaler
+# === Load model and scaler ===
 model = joblib.load("rainfall_model.pkl")
 scaler = joblib.load("rainfall_scaler.pkl")
 
@@ -19,11 +19,9 @@ df['month'] = df['date'].dt.to_period('M')
 monthly_rainfall = df.groupby('month')['rainfall'].sum().reset_index()
 monthly_rainfall['rainfall'] = monthly_rainfall['rainfall'].fillna(0)
 
-# Normalize
 rainfall_values = monthly_rainfall['rainfall'].values.reshape(-1, 1)
 rainfall_scaled = scaler.transform(rainfall_values)
 
-# Create lag features
 def create_features(data, n_lags=7):
     X = []
     for i in range(n_lags, len(data)):
@@ -35,7 +33,7 @@ pred_scaled = model.predict(X_input)
 pred_actual = scaler.inverse_transform(pred_scaled.reshape(-1, 1))
 actual = rainfall_values[7:]
 
-# Save predictions to static/rainfall_data.json
+# === Save API data to JSON ===
 data_to_save = {
     'actual': actual.flatten().tolist(),
     'predicted': pred_actual.flatten().tolist()
@@ -45,23 +43,21 @@ os.makedirs("static", exist_ok=True)
 with open("static/rainfall_data.json", "w") as f:
     json.dump(data_to_save, f)
 
-# === ROUTES ===
-
-# Serve API JSON
+# === API Routes ===
 @app.route("/api/data")
 def get_data():
     return jsonify(data_to_save)
 
-# Serve index.html (dashboard)
+# === Serve HTML Dashboard ===
 @app.route("/")
 def index():
     return send_from_directory("frontend", "index.html")
 
-# Serve CSS, JS, and other static frontend files
 @app.route("/<path:path>")
 def static_proxy(path):
     return send_from_directory("frontend", path)
 
-# Start Flask server
+# === Local dev only (Render will use gunicorn) ===
 if __name__ == "__main__":
-    app.run(port=8080, debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
