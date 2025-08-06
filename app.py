@@ -6,6 +6,7 @@ import numpy as np
 import joblib
 import json
 import os
+import zipfile  # Added for ZIP reading
 
 app = Flask(__name__)
 
@@ -14,7 +15,11 @@ model = joblib.load("rainfall_model.pkl")
 scaler = joblib.load("rainfall_scaler.pkl")
 
 # === Rainfall data preprocessing ===
-df = pd.read_csv("rainfall.csv", parse_dates=['date'])
+# ✅ Read from rainfall.csv.zip
+with zipfile.ZipFile("rainfall.csv.zip") as z:
+    with z.open("rainfall.csv") as f:
+        df = pd.read_csv(f, parse_dates=["date"])
+
 df['month'] = df['date'].dt.to_period('M')
 monthly_rainfall = df.groupby('month')['rainfall'].sum().reset_index()
 monthly_rainfall['rainfall'] = monthly_rainfall['rainfall'].fillna(0)
